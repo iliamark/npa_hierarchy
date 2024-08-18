@@ -151,7 +151,6 @@ class Operator:
         else:
             raise ValueError("Only operators instances allowed with @ operation.")
         
-
     def conj(self):
         new_op = Operator.identity()
         new_op.transcript = self.transcript[::-1]
@@ -311,11 +310,12 @@ class NpaHierarchy:
         for i in range(npa_operator_count):
             gamma_row = list()
             for j in range(npa_operator_count):
-                gamma_row.append(self.npa_operators[i] @ self.npa_operators[j])
+                gamma_row.append(self.npa_operators[i].conj() @ self.npa_operators[j])
             gamma_matrix_entries.append(gamma_row)
         return gamma_matrix_entries
     
     def feasability(self, distribution):
+        # todo - i want to do an upper triangle, diagonal and then using the symmetricity.
         gamma_matrix_instance = list()
         variable_dict = dict()
         for i in range(len(self.gamma_operator_matrix)):
@@ -334,4 +334,28 @@ class NpaHierarchy:
                     current_value = current_operator.evaluate(distribution)
                 gamma_matrix_instance_row.append(current_value)
             gamma_matrix_instance.append(gamma_matrix_instance_row)
+        return gamma_matrix_instance, variable_dict       
+    
+    def feasability_symm(self, distribution):
+        # todo - i want to do an upper triangle, diagonal and then using the symmetricity.
+        n = len(self.gamma_operator_matrix)
+        gamma_matrix_instance = [[0 for i in range(n)] for j in range(n)]
+        variable_dict = dict()
+        for i in range(n):
+            j = 0
+            while j <= i:
+                current_operator = self.gamma_operator_matrix[i][j]
+                if current_operator.is_variable():
+                    if current_operator.__str__() in variable_dict:
+                        current_value = variable_dict[current_operator.__str__()]
+                    elif current_operator.conj().__str__() in variable_dict:
+                        current_value = variable_dict[current_operator.conj().__str__()]
+                    else:
+                        current_value = cp.Variable()
+                        variable_dict[current_operator.__str__()] = current_value
+                else:
+                    current_value = current_operator.evaluate(distribution)
+            gamma_matrix_instance[i][j] = current_value
+            if j < i:
+                gamma_matrix_instance[j][i] = current_value
         return gamma_matrix_instance, variable_dict       
