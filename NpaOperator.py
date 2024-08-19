@@ -67,16 +67,7 @@ class NpaOperator:
             raise ValueError("Invalid operator for manifestation")
         
     def is_variable(self):
-        if self == NpaOperator.null():
-            return False
-        elif self == NpaOperator.identity():
-            return False
-        elif self.right_operator == Operator.identity() and len(self.left_operator.transcript) == 1:
-            return False
-        elif self.left_operator == Operator.identity() and len(self.right_operator.transcript) == 1:
-            return False
-        elif len(self.left_operator.transcript) == 1 and len(self.right_operator.transcript) == 1:
-            return False
-        else:
-            return True
-        
+        # If there is more than one projection in either the left or right operator, then the operator is not a variable.
+        not_var_cond = len(self.left_operator.transcript) == 1 and len(self.right_operator.transcript) == 1
+        return not not_var_cond
+            
